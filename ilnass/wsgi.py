@@ -1,5 +1,5 @@
 """
-WSGI config for class project.
+WSGI config for ilnass project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'class.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ilnass.settings')
 
 application = get_wsgi_application()
