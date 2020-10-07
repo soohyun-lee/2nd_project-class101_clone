@@ -15,7 +15,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+STATIC_URL = '/static/'
 
 # Quick-start development settings - unsuitable for production
 # See https://doc.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'product',
+    'storages'
 ]
 
 MIDDLEWARE = [
@@ -115,7 +117,41 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = '/static/'
+#s3 storages
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = '/mediafiles/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
+
+#AWS Access 
+AWS_LOCATION = 'static'
+
+AWS_ACCESS_KEY_ID = 'AKIAXFWNGZ4LDYGGPN73'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'soohyunlee'
+AWS_S3_CUSTOM_DOMAIN='%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_OBJECT_PARAMETERS = {    
+     'CacheControl': 'max-age=86400',
+}
+
+AWS_REGION = 'ap-northeast-2'
+
+# Route 53 연결 시, AWS_S3_CUSTOM_DOMAIN 수정
+
+# AWS_S3_OBJECT_PARAMETERS = {
+#     'CacheControl' : 'max-age=86400',
+# }
+# AWS_DEFAULT_ACL = 'public-read'
+# AWS_LOCATION = 'static'
+# AWS_S3_SECURE_URLS = False
+
+
+# STATIC_URL = 'http://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+
+# STATIC_DIR = os.path.join(BASE_DIR, 'static')
+# STATICFILES_DIRS = [
+#     STATIC_DIR,
+# ]
 
 #REMOVE_APPEND_SLASH_WARNING
 APPEND_SLASH = False
