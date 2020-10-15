@@ -3,14 +3,21 @@ import bcrypt, json, jwt, re, requests
 from django.shortcuts import render
 from django.http      import HttpResponse, JsonResponse
 from django.views     import View
-
-from ilnass.settings  import SECRET_KEY, ALGORITHM
-
+from my_settings      import SECRET_KEY, ALGORITHM
 from .models          import (User,
-                             Creator,
-                             SNS,
-                             CreatorSNS)
-from decorator        import authorization
+                            Creator,
+                            SNS,
+                            CreatorSNS)
+
+from product.models   import (Product,
+                            DetailImage,
+                            Brand,
+                            Level,
+                            Introduction,
+                            Status,
+                            Product_Status
+                            )
+from decorator import authorization
 
 
 class KakaoSignIn(View):
@@ -40,4 +47,4 @@ class KakaoSignIn(View):
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status = 402)
 
-
+        
