@@ -9,6 +9,7 @@ from django.http       import JsonResponse
 from datetime          import datetime
 from django.db         import models
 from .models           import (
+    Section,
     Product,
     DetailImage,
     Brand,
@@ -17,7 +18,7 @@ from .models           import (
     Status,
     Product_Status
 )
-
+from django.utils import timezone
 from user.models       import (User,
     Creator,
     SNS,
@@ -25,6 +26,7 @@ from user.models       import (User,
     CreatorSNS)
 
 from decorator   import authorization
+from datetime import datetime, date
 from django.core.files.storage import default_storage
 # from urllib import parse
 
@@ -32,7 +34,7 @@ from django.core.files.storage import default_storage
 #전체 리스트
 class Allproducts(View):
     def get(self,request):
-        product_all = Product.objects.all()
+        product_all = Product.objects.filter(section_id = 1)
         product_list = [{
             'id'               : product.id,
             'thumbnail'        : str(product.thumbnail),
@@ -69,19 +71,9 @@ class RecommendView(View):
 #디테일 이미지 리스트
 class Detailimage(View):
     def get(self,request):
-        
-        details = DetailImage.objects.select_related('product').all(product_id=1)
-        detail_image = {
-            'detail_image'     : [detail.detail_image for detail in details],
-        }
-        return JsonResponse({'data':detail_image}, status=200)
-
-
-
-#디테일 우측 정보
-class DetailView(View):
-    def get(self,request):
         product = Product.objects.get(id=1)
+        like_count = 92
+        recommend_products = Product.objects.filter(like__gt = like_count)
         product_detail = {
             'id'               : product.id,
             'category'         : product.category,
@@ -90,30 +82,21 @@ class DetailView(View):
             'monthly_pay'      : product.monthly_pay,
             'discount_percent' : product.discount_percent,
             'heart_count'      : product.heart_count,
-            'end_datetime'     : product.end_datetime.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        
+            'end_datetime'     : product.end_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            'detail_image'     : [detail.detail_image for detail in DetailImage.objects.select_related('product').filter(product_id=1)],
+            'recommend_product' : [{
+                'id'               : product.id,
+                'thumbnail'        : str(product.thumbnail),
+                'category'         : product.category,
+                'name'             : product.name,
+                'heart_count'      : product.heart_count,
+                'like'             : product.like,
+                'retail_price'     : product.retail_price,
+                'discount_percent' : product.discount_percent,
+                'monthly_pay'      : product.monthly_pay,
+                'monthly_payment'  : product.monthly_payment,
+            }for product in recommend_products]}
         return JsonResponse({'data':product_detail}, status=200)
-
-# 디테일 recommend
-class DetailView_Recommend(View):
-    def get(self,request):
-        like_count = 92
-        recommend_products = Product.objects.filter(like__gt = like_count)
-        recommend_product = [{
-            'id'               : product.id,
-            'thumbnail'        : str(product.thumbnail),
-            'category'         : product.category,
-            'name'             : product.name,
-            'heart_count'      : product.heart_count,
-            'like'             : product.like,
-            'retail_price'     : product.retail_price,
-            'discount_percent' : product.discount_percent,
-            'monthly_pay'      : product.monthly_pay,
-            'monthly_payment'  : product.monthly_payment,
-        }for product in recommend_products]
-
-        return JsonResponse({'data':recommend_product}, status=200)
 
 # 오픈 예정
 class OpenProduct(View):
@@ -124,13 +107,12 @@ class OpenProduct(View):
             'category'             : product.category,
             'thumbnail'            : str(product.thumbnail),
             'name'                 : product.name,
-            'brand'                : product.brand_id,
+            'brand'                : product.brand.name,
             'detail_category'      : product.detail_category,
-            'level'                : product.level_id,
+            'level'                : product.level.name,
             'cover_image'          : str(product.cover_image),
             'introduction_image'   :[str(intro.introduction_image) for intro in product.introduction_set.all()],
             'introduction_text'    :[intro_text.introduction_text for intro_text in product.introduction_set.all()],
-            # 'status'               : [i.status_id for i in product.product_status_set.all()],
             'profile_image'        : product.creator.creator_set.all()[0].profile_image,
             'nickname'             : product.creator.creator_set.all()[0].nickname,
             'phone_number'         : product.creator.creator_set.all()[0].phone_number,
@@ -150,37 +132,46 @@ class BasicInformation(View):
     @authorization
     def post(self, request):
         data = json.loads(request.body)
-        creator = request.user
-
-        if Product.objects.filter(creator_id=creator).exists():
-            Product.objects.filter(creator_id=creator).update(
-            brand_id        = data['brand'],
-            category        = data['category'],
-            detail_category = data['detail_category'],
-            level_id        = data['level'],
-            )
-            
-        else:
+        if Product.objects.filter(creator_id=request.user) not exists():
             product = Product.objects.create(
-            brand_id        = data['brand'],
-            category        = data['category'],
-            detail_category = data['detail_category'],
-            level_id        = data['level'],
-            creator_id      = creator
+                brand_id        = data['brand'],
+                category        = data['category'],
+                detail_category = data['detail_category'],
+                level_id        = data['level'],
+                creator_id      = request.user,
+                section_id      = 2,
             )
 
             Product_Status.objects.create(
-            product_id      = product.id,
-            status_id       = 1
+                product_id      = product.id,
+                status_id       = 1
             )
 
+            Creator.objects.create(
+                user_id = request.user
+            )
+
+        return JsonResponse({'data':'SUCCESS'}, status=200)
+
+    @authorization
+    def patch(self, request):
+        data = json.loads(request.body)
+        try:
+            Product.objects.filter(creator_id=request.user).update(
+            brand_id        = data['brand'],
+            category        = data['category'],
+            detail_category = data['detail_category'],
+            level_id        = data['level'],
+            )
+        except DoesNotExist:
+            return JsonResponse({'message':'Does_Not_Exist'}, status=400)
         return JsonResponse({'data':'SUCCESS'}, status=200)
 
     @authorization
     def get(self,request):
         product = Product.objects.get(creator_id=request.user)
         status = Product_Status.objects.prefetch_related('product').filter(product_id=product.id)
-        introduction = Introduction.objects.filter(product_id=product.id)
+        introduce = Introduction.objects.filter(product_id=product.id)
         creator_intro = Creator.objects.get(user_id=request.user)
         snslist = CreatorSNS.objects.filter(creator_id=creator_intro.id)
 
@@ -189,15 +180,12 @@ class BasicInformation(View):
             'category'             : product.category,
             'thumbnail'            : str(product.thumbnail),
             'name'                 : product.name,
-            'retail_price'         : product.retail_price,
-            'discount_percent'     : product.discount_percent,
-            'monthly_pay'          : product.monthly_pay,
             'brand'                : product.brand_id,
             'detail_category'      : product.detail_category,
             'level'                : product.level_id,
             'cover_image'          : str(product.cover_image),
-            'introduction_image'   : [str(image.introduction_image) for image in introduction],
-            'introduction_text'    : [text.introduction_text for text in introduction],
+            'introduction_image'   : [str(image.introduction_image) for image in introduce],
+            'introduction_text'    : [text.introduction_text for text in introduce],
             'status'               : [i.status.name for i in Product_Status.objects.prefetch_related('product').filter(product_id=product.id)],
             'profile_image'        : creator_intro.profile_image,
             'nickname'             : creator_intro.nickname,
@@ -210,51 +198,65 @@ class BasicInformation(View):
                     "account"   : sns.sns_account,
                     "address"   : sns.sns_address
                 } for sns in snslist]}
-                
         return JsonResponse({'data':open_product}, status=200)
 
 
 class TitleAndCover(View):
     @authorization
     def post(self, request):
-        # print(access_token)
-        if Product.objects.filter(creator_id=request.user).exists():
-        
-            cover = request.FILES.get('cover')
-            thumbnail = request.FILES.get('thumbnail')
-            title = request.POST.get('title')
-            default_storage.save(cover.name, cover)
-            default_storage.save(thumbnail.name, thumbnail)
+        cover = request.FILES.get('cover')
+        thumbnail = request.FILES.get('thumbnail')
+        title = request.POST.get('title')
 
-            return_cover_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{cover.name}"
-            return_thumbnail_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{thumbnail.name}"
-            
-            Product.objects.filter(creator_id=request.user).update(
-                    cover_image = return_cover_url,
-                    thumbnail   = return_thumbnail_url,
-                    name        = title
-                    )
+        default_storage.save(cover.name, cover)
+        default_storage.save(thumbnail.name, thumbnail)
 
-        else:
+        return_cover_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{cover.name}"
+        return_thumbnail_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{thumbnail.name}"
+
+        if Product.objects.filter(creator_id=request.user) not exists():
             product = Product.objects.create(
-                cover_image = return_cover_url,
-                thumbnail   = return_thumbnail_url,
-                name        = title,
-                creator_id  = request.user
-                )
+                cover_image     = return_cover_url,
+                thumbnail       = return_thumbnail_url],
+                name            = title,
+            )
+
+            Creator.objects.create(
+                user = request.uer
+            )
 
             Product_Status.objects.create(
-                product_id      = product.id,
-                status_id       = 2
-                )
-        
-        return JsonResponse({'message':'SUCCESS'}, status=200) 
+                product_id = product.id
+                status_id  = 2
+            )
+
+            # if not Product_Status.objects.filter(product_id = product.id, status_id = 2).exists():
+            #     Product_Status.objects.create(
+            #     product_id      = Product.objects.get(creator_id=request.user).id,
+            #     status_id       = 2
+            #     )
+
+        # else:
+        #     product = Product.objects.create(
+        #     cover_image = return_cover_url,
+        #     thumbnail   = return_thumbnail_url,
+        #     name        = title,
+        #     creator_id  = request.user
+        #     )
+
+        #     Product_Status.objects.create(
+        #     product_id      = product.id,
+        #     status_id       = 2
+        #     )
+
+
+        return JsonResponse({'message':'SUCCESS'}, status=200)
 
     @authorization
     def get(self,request):
         product = Product.objects.get(creator_id=request.user)
         status = Product_Status.objects.prefetch_related('product').filter(product_id=product.id)
-        introduction = Introduction.objects.filter(product_id=product.id)
+        introduce = Introduction.objects.filter(product_id=product.id)
         creator_intro = Creator.objects.get(user_id=request.user)
         snslist = CreatorSNS.objects.filter(creator_id=creator_intro.id)
 
@@ -263,15 +265,12 @@ class TitleAndCover(View):
             'category'             : product.category,
             'thumbnail'            : str(product.thumbnail),
             'name'                 : product.name,
-            'retail_price'         : product.retail_price,
-            'discount_percent'     : product.discount_percent,
-            'monthly_pay'          : product.monthly_pay,
             'brand'                : product.brand_id,
             'detail_category'      : product.detail_category,
             'level'                : product.level_id,
             'cover_image'          : str(product.cover_image),
-            'introduction_image'   : [str(image.introduction_image) for image in introduction],
-            'introduction_text'    : [text.introduction_text for text in introduction],
+            'introduction_image'   : [str(image.introduction_image) for image in introduce],
+            'introduction_text'    : [text.introduction_text for text in introduce],
             'status'               : [i.status.name for i in Product_Status.objects.prefetch_related('product').filter(product_id=product.id)],
             'profile_image'        : creator_intro.profile_image,
             'nickname'             : creator_intro.nickname,
@@ -284,9 +283,7 @@ class TitleAndCover(View):
                     "account"   : sns.sns_account,
                     "address"   : sns.sns_address
                 } for sns in snslist]}
-                
         return JsonResponse({'data':open_product}, status=200)
-
 
 
 
@@ -299,9 +296,7 @@ class Introduce(View):
 
         introduction_images = request.FILES.getlist('introduction_image')
         introduction_text = request.POST.getlist('introduction_text')
-        status = request.POST.get('status')
-        
-        n = Product_Status.objects.filter(product_id=product.id)
+
         url_list = []
 
         for i in introduction_images:
@@ -317,15 +312,13 @@ class Introduce(View):
                 product_id = Product.objects.get(creator_id=request.user).id
             )
 
-        new = []
-        for i in n:
-            new.append(i.status_id)
 
-        if int(status) not in new:
+        if not Product_Status.objects.filter(product_id = product.id, status_id = 3).exists():
             Product_Status.objects.create(
-            product_id      = product.id,
-            status_id       = status
+            product_id      = Product.objects.get(creator_id=request.user).id,
+            status_id       = 3
             )
+
 
         return JsonResponse({'message':'SUCCESS'}, status=200)
 
@@ -333,7 +326,7 @@ class Introduce(View):
     def get(self,request):
         product = Product.objects.get(creator_id=request.user)
         status = Product_Status.objects.prefetch_related('product').filter(product_id=product.id)
-        introduction = Introduction.objects.filter(product_id=product.id)
+        introduce = Introduction.objects.filter(product_id=product.id)
         creator_intro = Creator.objects.get(user_id=request.user)
         snslist = CreatorSNS.objects.filter(creator_id=creator_intro.id)
 
@@ -342,15 +335,12 @@ class Introduce(View):
             'category'             : product.category,
             'thumbnail'            : str(product.thumbnail),
             'name'                 : product.name,
-            'retail_price'         : product.retail_price,
-            'discount_percent'     : product.discount_percent,
-            'monthly_pay'          : product.monthly_pay,
             'brand'                : product.brand_id,
             'detail_category'      : product.detail_category,
-            'level'                : product.level.name,
+            'level'                : product.level_id,
             'cover_image'          : str(product.cover_image),
-            'introduction_image'   : [str(image.introduction_image) for image in introduction],
-            'introduction_text'    : [text.introduction_text for text in introduction],
+            'introduction_image'   : [str(image.introduction_image) for image in introduce],
+            'introduction_text'    : [text.introduction_text for text in introduce],
             'status'               : [i.status.name for i in Product_Status.objects.prefetch_related('product').filter(product_id=product.id)],
             'profile_image'        : creator_intro.profile_image,
             'nickname'             : creator_intro.nickname,
@@ -363,5 +353,4 @@ class Introduce(View):
                     "account"   : sns.sns_account,
                     "address"   : sns.sns_address
                 } for sns in snslist]}
-                
         return JsonResponse({'data':open_product}, status=200)

@@ -18,7 +18,7 @@ class Section(models.Model):
     name = models.CharField(max_length=100, null=True)
 
     class Meta:
-        db_table = 'sections'        
+        db_table = 'sections'   
 
 
 class Product(models.Model):
