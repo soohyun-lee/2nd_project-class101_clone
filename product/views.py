@@ -230,24 +230,6 @@ class TitleAndCover(View):
                 status_id  = 2
             )
 
-            # if not Product_Status.objects.filter(product_id = product.id, status_id = 2).exists():
-            #     Product_Status.objects.create(
-            #     product_id      = Product.objects.get(creator_id=request.user).id,
-            #     status_id       = 2
-            #     )
-
-        # else:
-        #     product = Product.objects.create(
-        #     cover_image = return_cover_url,
-        #     thumbnail   = return_thumbnail_url,
-        #     name        = title,
-        #     creator_id  = request.user
-        #     )
-
-        #     Product_Status.objects.create(
-        #     product_id      = product.id,
-        #     status_id       = 2
-        #     )
 
 
         return JsonResponse({'message':'SUCCESS'}, status=200)
