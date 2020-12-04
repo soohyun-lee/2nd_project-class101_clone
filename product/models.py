@@ -20,7 +20,6 @@ class Section(models.Model):
     class Meta:
         db_table = 'sections'
 
-
 class Product(models.Model):
     name             = models.CharField(max_length=45, null=True)
     category         = models.CharField(max_length=10, null=True)

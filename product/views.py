@@ -28,7 +28,6 @@ from user.models       import (User,
 from decorator   import authorization
 from datetime import datetime, date
 from django.core.files.storage import default_storage
-# from urllib import parse
 
 
 #전체 리스트
@@ -132,7 +131,6 @@ class BasicInformation(View):
     @authorization
     def post(self, request):
         data = json.loads(request.body)
-        # if not Product.objects.filter(creator_id=request.user).exists():
         product = Product.objects.create(
             brand_id        = data['brand'],
             category        = data['category'],
@@ -200,7 +198,6 @@ class BasicInformation(View):
                 } for sns in snslist]}
         return JsonResponse({'data':open_product}, status=200)
 
-### ㄹㅔ알 
 class TitleAndCover(View):
     @authorization
     def post(self, request):
@@ -228,40 +225,6 @@ class TitleAndCover(View):
 
 
         return JsonResponse({'message':'SUCCESS'}, status=200)
-
-### ㄹㅔ알 
-
-
-# class TitleAndCover(View):
-#     @authorization
-#     def post(self, request):
-#         cover = request.FILES.get('cover')
-#         thumbnail = request.FILES.get('thumbnail')
-#         title = request.POST.get('title')
-
-#         default_storage.save(cover.name, cover)
-#         default_storage.save(thumbnail.name, thumbnail)
-
-#         return_cover_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{cover.name}"
-#         return_thumbnail_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{thumbnail.name}"
-
-#         # if Product.objects.filter(creator_id=request.user) not exists():
-#         product = Product.objects.filter(creator_id=request.user).create(
-#             cover_image     = return_cover_url,
-#             thumbnail       = return_thumbnail_url,
-#             name            = title,
-#         )
-
-#             # Creator.objects.create(
-#             #     user_id = request.user
-#             # )
-            
-#         Product_Status.objects.create(
-#             product_id = product.id,
-#             status_id  = 2
-#         )
-
-#         return JsonResponse({'message':'SUCCESS'}, status=200)
 
     @authorization
     def get(self,request):
@@ -296,7 +259,6 @@ class TitleAndCover(View):
                 } for sns in snslist]}
                 
         return JsonResponse({'data':open_product}, status=200)
-
 
 
 class Introduce(View):

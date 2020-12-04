@@ -80,7 +80,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='creator',
             name='sns_name',
-            field=models.ManyToManyField(through='user.CreatorSNS', to='user.SNS'),
+            field=models.ManyToManyField(null=True, through='user.CreatorSNS', to='user.SNS'),
         ),
         migrations.AddField(
             model_name='creator',

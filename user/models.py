@@ -42,7 +42,7 @@ class CreatorSNS(models.Model):
     sns          = models.ForeignKey(SNS, on_delete = models.CASCADE, null=True)
     sns_account  = models.CharField(max_length = 50, null = True)
     sns_address  = models.CharField(max_length = 50, null = True)
-
+    
     class Meta:
         db_table = 'creator_sns'
 
