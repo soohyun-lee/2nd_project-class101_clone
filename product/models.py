@@ -18,7 +18,7 @@ class Section(models.Model):
     name = models.CharField(max_length=100, null=True)
 
     class Meta:
-        db_table = 'sections'   
+        db_table = 'sections'
 
 
 class Product(models.Model):
@@ -40,7 +40,7 @@ class Product(models.Model):
     creator          = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     section          = models.ForeignKey(Section, on_delete=models.CASCADE, null=True)
 
-    class Meta: 
+    class Meta:
         db_table = 'products'
 
 class Status(models.Model):
@@ -59,7 +59,7 @@ class Product_Status(models.Model):
 class DetailImage(models.Model):
     product   = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     detail_image = models.URLField(max_length=300, null=True)
-    
+
     class Meta:
         db_table = 'detail_image'
 

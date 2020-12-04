@@ -69,7 +69,7 @@ class RecommendView(View):
         return JsonResponse({'data':recommend_product}, status=200)
 
 #디테일 이미지 리스트
-class Detailimage(View):
+class DetailView(View):
     def get(self,request):
         product = Product.objects.get(id=1)
         like_count = 92
@@ -132,24 +132,24 @@ class BasicInformation(View):
     @authorization
     def post(self, request):
         data = json.loads(request.body)
-        if Product.objects.filter(creator_id=request.user) not exists():
-            product = Product.objects.create(
-                brand_id        = data['brand'],
-                category        = data['category'],
-                detail_category = data['detail_category'],
-                level_id        = data['level'],
-                creator_id      = request.user,
-                section_id      = 2,
-            )
+        # if not Product.objects.filter(creator_id=request.user).exists():
+        product = Product.objects.create(
+            brand_id        = data['brand'],
+            category        = data['category'],
+            detail_category = data['detail_category'],
+            level_id        = data['level'],
+            creator_id      = request.user,
+            section_id      = 2,
+        )
 
-            Product_Status.objects.create(
-                product_id      = product.id,
-                status_id       = 1
-            )
+        Product_Status.objects.create(
+            product_id      = product.id,
+            status_id       = 1
+        )
 
-            Creator.objects.create(
-                user_id = request.user
-            )
+        Creator.objects.create(
+            user_id = request.user
+        )
 
         return JsonResponse({'data':'SUCCESS'}, status=200)
 
@@ -200,7 +200,7 @@ class BasicInformation(View):
                 } for sns in snslist]}
         return JsonResponse({'data':open_product}, status=200)
 
-
+### ㄹㅔ알 
 class TitleAndCover(View):
     @authorization
     def post(self, request):
@@ -214,25 +214,54 @@ class TitleAndCover(View):
         return_cover_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{cover.name}"
         return_thumbnail_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{thumbnail.name}"
 
-        if Product.objects.filter(creator_id=request.user) not exists():
-            product = Product.objects.create(
-                cover_image     = return_cover_url,
-                thumbnail       = return_thumbnail_url],
-                name            = title,
-            )
+        product = Product.objects.get(creator_id=request.user)
+        Product.objects.filter(creator_id=request.user).update(
+            cover_image     = return_cover_url,
+            thumbnail       = return_thumbnail_url,
+            name            = title,
+        )
 
-            Creator.objects.create(
-                user = request.uer
-            )
-
-            Product_Status.objects.create(
-                product_id = product.id
-                status_id  = 2
-            )
-
+        Product_Status.objects.create(
+            product_id = product.id,
+            status_id  = 2
+        )
 
 
         return JsonResponse({'message':'SUCCESS'}, status=200)
+
+### ㄹㅔ알 
+
+
+# class TitleAndCover(View):
+#     @authorization
+#     def post(self, request):
+#         cover = request.FILES.get('cover')
+#         thumbnail = request.FILES.get('thumbnail')
+#         title = request.POST.get('title')
+
+#         default_storage.save(cover.name, cover)
+#         default_storage.save(thumbnail.name, thumbnail)
+
+#         return_cover_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{cover.name}"
+#         return_thumbnail_url = f"https://soohyunlee.s3.ap-northeast-2.amazonaws.com/static/{thumbnail.name}"
+
+#         # if Product.objects.filter(creator_id=request.user) not exists():
+#         product = Product.objects.filter(creator_id=request.user).create(
+#             cover_image     = return_cover_url,
+#             thumbnail       = return_thumbnail_url,
+#             name            = title,
+#         )
+
+#             # Creator.objects.create(
+#             #     user_id = request.user
+#             # )
+            
+#         Product_Status.objects.create(
+#             product_id = product.id,
+#             status_id  = 2
+#         )
+
+#         return JsonResponse({'message':'SUCCESS'}, status=200)
 
     @authorization
     def get(self,request):
@@ -265,6 +294,7 @@ class TitleAndCover(View):
                     "account"   : sns.sns_account,
                     "address"   : sns.sns_address
                 } for sns in snslist]}
+                
         return JsonResponse({'data':open_product}, status=200)
 
 

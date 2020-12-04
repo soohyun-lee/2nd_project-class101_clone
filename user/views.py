@@ -22,6 +22,7 @@ class KakaoSignIn(View):
         try:
             token        = request.headers.get('Authorization')
             profile_json = requests.get('https://kapi.kakao.com/v2/user/me', headers={'Authorization':f'Bearer {token}'}).json()
+            print(profile_json)
             data_kakao = profile_json['kakao_account']
             email    = data_kakao['email']
             nickname = data_kakao['profile']['nickname']
@@ -43,7 +44,6 @@ class CreatorIntro(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
-            # print(data[])
             for i in range(0,100):
                 sns     = data['sns'][i]['sns']
                 sns1    = data['sns'][i]['account']
@@ -51,22 +51,26 @@ class CreatorIntro(View):
                 # if data['photo'] == '' or data['nickname'] == '' or data['phone_no'] == '' or data['personality'] == '':
                 #     return JsonResponse({'message':'blank is not allowed'}, status=401)
                 # else:
-                new_creator = Creator.objects.create(
-                    user                 = User.objects.get(id=request.user),
+                
+                creator = Creator.objects.get(user_id = request.user)
+                Creator.objects.filter(user_id = request.user).update(
+                    # user                 = User.objects.get(id=request.user),
                     profile_image        = data['photo'],
                     nickname             = data['nickname'],
                     phone_number         = data['phone_no'],
                     creator_introduction = data['personality'],
                 )
+
                 CreatorSNS.objects.create(
                     sns_account = sns1,
                     sns_address = sns2,
-                    creator     = new_creator,
+                    creator_id  = creator.id,
                     sns_id      = SNS.objects.get(name=sns).id
                 )
+
                 Hashtag.objects.create(
-                    name    = data['hashtag'],
-                    creator = new_creator
+                    name       = data['hashtag'],
+                    creator_id = creator.id
                 )
 
                 Product_Status.objects.create(
@@ -74,14 +78,12 @@ class CreatorIntro(View):
                     status_id   = 4
                 )
 
-            
-
-
                 return JsonResponse({'message':'SUCCESS'}, status=200)   
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status=430)
         except Creator.DoesNotExist:
             return JsonResponse({'message':'Such sns does not exist.'})
+
 
     @authorization
     def get(self,request):
