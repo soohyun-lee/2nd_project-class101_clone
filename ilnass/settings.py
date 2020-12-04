@@ -143,12 +143,15 @@ AWS_S3_OBJECT_PARAMETERS = {
 AWS_REGION = 'ap-northeast-2'
 AWS_S3_ENDPOINT_URL = 'https://s3.amazonaws.com'
 
+
+
 S3DIRECT_DESTINATIONS = {
     'primary_destination': {
         'key': 'uploads/',
         'allowed': ['image/jpg', 'image/jpeg', 'image/png',],
     },
 }
+
 
 
 #REMOVE_APPEND_SLASH_WARNING

@@ -116,3 +116,7 @@ class CreatorIntro(View):
                     "address"   : sns.sns_address
                 } for sns in snslist]}
         return JsonResponse({'data':open_product}, status=200)
+
+
+
+
