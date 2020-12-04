@@ -143,8 +143,6 @@ AWS_S3_OBJECT_PARAMETERS = {
 AWS_REGION = 'ap-northeast-2'
 AWS_S3_ENDPOINT_URL = 'https://s3.amazonaws.com'
 
-
-
 S3DIRECT_DESTINATIONS = {
     'primary_destination': {
         'key': 'uploads/',
@@ -152,20 +150,6 @@ S3DIRECT_DESTINATIONS = {
     },
 }
 
-# AWS_S3_OBJECT_PARAMETERS = {
-#     'CacheControl' : 'max-age=86400',
-# }
-# AWS_DEFAULT_ACL = 'public-read'
-# AWS_LOCATION = 'static'
-# AWS_S3_SECURE_URLS = False
-
-
-# STATIC_URL = 'http://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
-
-# STATIC_DIR = os.path.join(BASE_DIR, 'static')
-# STATICFILES_DIRS = [
-#     STATIC_DIR,
-# ]
 
 #REMOVE_APPEND_SLASH_WARNING
 APPEND_SLASH = False
