@@ -1,67 +1,84 @@
-import json
-
-import bcrypt, re, requests
-
-from .models        import User, SNS, Creator, CreatorSNS
-from django.test    import TestCase
-from django.test    import Client
-from unittest.mock  import patch, MagicMock
-
-class KakaoSignInTest(TestCase):
-
+class CreatorIntroTest(TestCase):
     def setUp(self):
-        User.objects.create(
-            email    = 'email',
-            nickname = 'someonethx'
+        user = User.objects.create(
+            email        = "something",
+            password     = 12345678,
+            phone_number = "something",
+            name         = "something",
+            nickname     = "something",
+            id = 1
         )
-    
+        SNS.objects.create(
+            name = "facebook",
+            id = 1
+        )
+        Creator.objects.create(
+            user_id              = 1,
+            profile_image        = 'randomvalueblahblah',
+            nickname             = 'somebody',
+            phone_number         = '12345678',
+            creator_introduction = 'blahblah',
+            id = 1
+        )
+        Hashtag.objects.create(
+            name       = 'randomthing',
+            creator_id = 1,
+            id = 1
+        )
+        CreatorSNS.objects.create(
+            creator_id  = 1,
+            sns_id      = 1,
+            sns_account = 'sungjinny',
+            sns_address = 'something@facebook.com',
+            id = 1
+        )
+        Product.objects.create(
+            name = 'somethingexists'
+        )
+        Status.objects.create(name = 'done', id = 1)
+        Status.objects.create(name = 'lit', id = 2)
+        Status.objects.create(name = 'legit', id = 3)
+        Status.objects.create(name = 'dope', id = 4)
+        Product_Status.objects.create(
+            product_id = 1,
+            status_id  = 4,  
+            id = 1
+        )
     def tearDown(self):
         User.objects.all().delete()
-    
-    @patch('user.views.requests') # user앱의 views.py에서 사용될 requests patch
-    def test_kakaosignin_post_success(self, mocked_requests):
+        SNS.objects.all().delete()
+        Creator.objects.all().delete()
+        Hashtag.objects.all().delete()
+        CreatorSNS.objects.all().delete()
+        Product.objects.all().delete()
+    @patch('user.views.requests')
+    def test_creatorintro_post_success(self):
         client = Client()
-
-        class MockResponse:
-            def json(self):
-                return{
-                    "kakao_account":{
-                    'email'   : 'email',
-                    'profile' : {'nickname':'someonethx'}
-                }
-                }
-        mocked_requests.get = MagicMock(return_value = MockResponse())
-
-        user = {
-            'email'   : 'something@gmail.com',
-            'profile' : {'nickname' : 'someonethx'}
+        creator = {
+            'user'                 : User.objects.get(id=1),
+            'profile_image'        : 'randomvalueblahblah',
+            'nickname'             : 'somebody',
+            'phone_number'         : '12345678',
+            'creator_introduction' : 'blahblah'
         }
-        response = client.post('/user/signin/kakao/callback', json.dumps(user), **{'Authorization':'1234', 'content_type':'application/json'})
-        #response = client.post('/user/signin/kakao/callback', **{'Authorization':'1234', 'content_type':'application/json'})
-
+        creator_sns = {
+            'sns_account' : 'sungjinny',
+            'sns_address' : 'something@facebook.com',
+            'creator_id'     : 1,
+            'sns_id'      : 1
+        }
+        hashtag = {
+            'name'    : 'randomthing',
+            'creator_id' : 1
+        }
+        product_status = {
+            'product_id' : 1,
+            'status_id'  : 4
+        }
+        response = client.post('/user/creator/intro', json.dumps(creator, creator_sns, hashtag, product_status), {'content_type':'application/json'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
             {
-                'access_token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImVtYWlsIn0.MY5vOH0OUeQI3YMRyIxYeMf3h-ekDhO_lz7LSRjIoGc'
-
+                'message': 'welldone'
             }
         )
-
-class CreatorIntroTest(TestCase):
-
-    def setUp(self):
-        Creator.objects.create(
-            user                 = request.user.id,
-            profile_image        = 'something.jpg',
-            nickname             = 'somebody',
-            phone_number         = '1234567',
-            sns_name             = 'facebook',
-            creator_introduction = 'blahblah'
-        )
-        CreatorSNS.objects.create(
-            sns_account = 'sungjinny',
-            sns_address = 'something@facebook.com'
-        )
-    
-    def tearDown(self):
-        Creator.objects.all().delete()
